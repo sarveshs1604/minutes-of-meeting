@@ -9,6 +9,8 @@ from django.http import HttpResponse
 def meeting(request):
     return render(request,'meeting.html')
 
+#create new meeting
+#saves the information from the form in the meeting.html
 def meetingsave(request):
     if request.method == "POST":
         topic = request.POST.get('topic')
@@ -60,8 +62,8 @@ def meetingsave(request):
     meetings=Event.objects.all()
     return render(request, 'meeting_list.html',{'meetings':meetings}) 
 
+#sends the meeting invitation using sending.html
 def meetingsend(request,id):
-    # Meeting details
     try:
         event=Event.objects.get(id=id)
     except Event.DoesNotExist:
@@ -95,22 +97,22 @@ def meetingsend(request,id):
         email.send()
     except Exception as e:
         return render(request, 'meeting.html', {"error": f"Error sending email: {str(e)}"})
-
-    # Redirect to the meeting page after sending the email
     return redirect('meeting_list')
 
+
+#first window that is opened after running which contains all the meeting info 
 def meeting_list(request):
-    meetings = Event.objects.all()  # Fetch all events
+    meetings = Event.objects.all()
     return render(request, 'meeting_list.html', {'meetings': meetings})
 
-#https://meet.google.com/vcj-iacy-faa
-
-
+#renders the template where remark(task) is added
 def after_meeting(request, id):
-    meeting = Event.objects.get(id=id)  # Get the meeting instance
-    return render(request, 'add_remark.html', {'meeting': meeting})  # Pass the meeting object
+    meeting = Event.objects.get(id=id)
+    return render(request, 'add_remark.html', {'meeting': meeting})
 
 
+#points_discussed part of the m-o-m
+#remarks, actual_start_time  and actual_end_time are provided in the form
 def points_discussed(request, id):
     if request.method == 'POST':
         meeting = get_object_or_404(Event, id=id)
@@ -131,7 +133,10 @@ def points_discussed(request, id):
         meeting.save()
 
         return redirect('meeting_list')
-    
+
+
+#points_agreed part of the m-o-m
+#tasks(remarks) are assigned with priority,assigned date and final date 
 def points_agreed(request, id):
     meeting = get_object_or_404(Event, id=id)
     
@@ -170,7 +175,7 @@ def points_agreed(request, id):
     
     else:
         # Get remarks for the specific meeting
-        remarks = meeting.remark  # Ensure the `remark` field is properly set in the Event model
+        remarks = meeting.remark
         assigned_remarks = [task.remark for task in meeting.tasks.all()]
         
         return render(request, 'assign_tasks.html', {
@@ -179,6 +184,7 @@ def points_agreed(request, id):
             'assigned_remarks': assigned_remarks
         })
 
+#deletes the mail from the meeting_list
 def delete_meeting(request, id):
 
     meeting = get_object_or_404(Event, id=id)
@@ -186,13 +192,16 @@ def delete_meeting(request, id):
     messages.success(request, 'Meeting deleted successfully!')
     return redirect('meeting_list')
 
+#diplayes the m-o-m content by clicking the row
 def minutes_of_meeting(request, id):
     meeting = get_object_or_404(Event, id=id)
     tasks = Task.objects.filter(meeting=meeting)  # Get all tasks related to the meeting
 
     return render(request, 'minutes_of_meeting.html', {'meeting': meeting, 'tasks': tasks})
 
-#calculation of time with the provided st
+
+#calculation of duration with the provided start_time and end_time 
+#or if actual_start_time and actual_end_time are provided it takes the later for the calculation
 def calculate_time_duration(start_time, end_time):
     """
     Calculate the duration between two times, accounting for cross-midnight scenarios.
@@ -200,15 +209,14 @@ def calculate_time_duration(start_time, end_time):
     start_datetime = datetime.combine(datetime.min, start_time)
     end_datetime = datetime.combine(datetime.min, end_time)
     if end_datetime < start_datetime:
-        end_datetime += timedelta(days=1)  # Handle cross-midnight case
+        end_datetime += timedelta(days=1)
     return end_datetime - start_datetime
 
 #sending mom mail
 def send_mom(request, id):
-    # Fetch the meeting details
+
     meeting = get_object_or_404(Event, id=id)
-    
-    # Fetch associated tasks
+    # Fetch associated tasks from the task table
     tasks = Task.objects.filter(meeting=meeting)
     context = {
         'meeting': {
@@ -235,19 +243,18 @@ def send_mom(request, id):
     # Render the HTML content
     html_content = render_to_string('sending_mom.html', context)
     
-    # Email details
     subject = f"Minutes of the Meeting - {meeting.topic}"
     from_email = "mr.vengeance303@gmail.com"
     to_email = ["sarveshs160405@gmail.com"]  # Replace with actual recipient emails
     
-    # Create the email message
     email = EmailMultiAlternatives(subject, "", from_email, to_email)
     email.attach_alternative(html_content, "text/html")
-    
-    # Send the email
+
     try:
         email.send()
         return redirect('meeting_list')
     except Exception as e:
         return HttpResponse(f"Failed to send email: {str(e)}")
 
+#https://meet.google.com/vcj-iacy-faa
+#g-meet link for your reference 
