@@ -139,9 +139,5 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'mr.vengeance303@gmail.com'
-EMAIL_HOST_PASSWORD = 'irsiclkwcsbfutmi' 
+EMAIL_HOST_PASSWORD = 'verification-password'
 
-import os
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
