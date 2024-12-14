@@ -192,6 +192,7 @@ def minutes_of_meeting(request, id):
 
     return render(request, 'minutes_of_meeting.html', {'meeting': meeting, 'tasks': tasks})
 
+#calculation of time with the provided st
 def calculate_time_duration(start_time, end_time):
     """
     Calculate the duration between two times, accounting for cross-midnight scenarios.
@@ -202,6 +203,7 @@ def calculate_time_duration(start_time, end_time):
         end_datetime += timedelta(days=1)  # Handle cross-midnight case
     return end_datetime - start_datetime
 
+#sending mom mail
 def send_mom(request, id):
     # Fetch the meeting details
     meeting = get_object_or_404(Event, id=id)
